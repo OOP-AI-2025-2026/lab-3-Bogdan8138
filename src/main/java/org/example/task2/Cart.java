@@ -1,69 +1,57 @@
 package org.example.task2;
 
 import java.util.Arrays;
+import java.util.NoSuchElementException;
 
 public class Cart {
+    private final Item[] items;
+    private int size;
 
-    public Item[] contents;
-    int index;
-
-    Cart(Item[] _contents) {
-        this.contents = _contents;
+    public Cart(Item[] storage) {
+        if (storage == null || storage.length == 0)
+            throw new IllegalArgumentException("initial storage must be non-empty");
+        this.items = storage;
+        this.size = 0;
     }
 
-    public void removeById(int itemIndex) {
-
-        if (index == 0)
-            return;
-
-        int foundItemIndex = findItemInArray(contents[itemIndex]);
-
-        if (foundItemIndex == -1)
-            return;
-
-        if (foundItemIndex == index - 1) {
-            contents[index - 1] = null;
-            index--;
-            return;
-        }
-
-        shiftArray(foundItemIndex);
+    public void add(Item item) {
+        if (item == null) throw new IllegalArgumentException("item is null");
+        if (isFull()) throw new IllegalStateException("cart is full");
+        this.items[this.size++] = item;
     }
 
-    public void shiftArray(int itemIndex) {
-        for (int i = itemIndex; i < index - 1; i++) {
-            contents[i] = contents[i + 1];
-        }
-        contents[index-1] = null;
-        index--;
+    public void removeById(long id) {
+        if (this.size == 0) return;
+        int idx = indexOfId(id);
+        if (idx == -1) return;
+        for (int i = idx; i < this.size - 1; i++) items[i] = items[i + 1];
+        items[--size] = null;
     }
 
-    public int findItemInArray(Item item) {
-        for (int i = 0; i < index; i++) {
-            if (contents[i].id == item.id) {
-                return i;
-            }
-        }
-
+    private int indexOfId(long id) {
+        for (int i = 0; i < this.size; i++) if (items[i].getId() == id) return i;
         return -1;
     }
 
-    void add(Item item) {
-        if (isCartFull())
-            return;
+    public boolean isFull()  { return this.size == items.length; }
+    public boolean isEmpty() { return this.size == 0; }
+    public int size()        { return this.size; }
 
-        contents[index] = item;
-        index++;
+    public Item[] toArray() { return Arrays.copyOf(items, size); }
+
+    public double total() {
+        double s = 0;
+        for (int i = 0; i < size; i++) s += items[i].getPrice();
+        return s;
     }
 
-    public boolean isCartFull() {
-        return index == contents.length;
+    public Item peekLast() {
+        if (size == 0) throw new NoSuchElementException("cart is empty");
+        return items[size - 1];
     }
 
     @Override
     public String toString() {
-        return "Cart{" +
-                "contents=" + Arrays.toString(contents) +
-                '}' + "\n";
+        return "Cart{contents=" + Arrays.toString(toArray()) + "}\n";
     }
 }
